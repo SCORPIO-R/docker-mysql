@@ -33,11 +33,31 @@
 
 我们希望在创建实例的过程中初始化sql脚本，mysql的官方镜像可以支持在容器启动的时候自动执行指定的sql脚本或者shell脚本，我们一起来看看MySql官方镜像的Dockerfile：
 
-![image-20200118161856580](/Users/batman/Library/Application Support/typora-user-images/image-20200118161856580.png)
+```dockerfile
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN ln -s usr/local/bin/docker-entrypoint.sh /entrypoint.sh # backwards compat
+ENTRYPOINT ["docker-entrypoint.sh"]
 
-设定了ENTRYPOINT，里面会调用/entrypoint.sh这个脚本，脚本其中一段内容如下图：
+EXPOSE 3306 33060
+CMD ["mysqld"]
+© 2020 GitHub, Inc.
+```
 
-![image-20200118161951242](/Users/batman/Library/Application Support/typora-user-images/image-20200118161951242.png)
+设定了ENTRYPOINT，里面会调用/entrypoint.sh这个脚本，脚本其中一段内容如下：
+
+```sh
+ echo
+	local f
+	for f; do
+		case "$f" in
+			*.sh)     mysql_note "$0: running $f"; . "$f" ;;
+			*.sql)    mysql_note "$0: running $f"; docker_process_sql < "$f"; echo ;;
+			*.sql.gz) mysql_note "$0: running $f"; gunzip -c "$f" | docker_process_sql; echo ;;
+			*)        mysql_warn "$0: ignoring $f" ;;
+		esac
+		echo
+	done
+```
 
 遍历docker-entrypoint-initdb.d目录下所有的.sh和.sql后缀的文件并执行。
 
