@@ -1,0 +1,1 @@
+docker build -t init_mysql:0.0.1 .
