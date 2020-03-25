@@ -1,6 +1,4 @@
-##### 创建MySql容器，初始化databse，以及设置字符集，初始化表，视图等
-
-- Dockerfile
+##### 创建MySql容器，初始化数据库(表，视图)，设置字符集
 
 - 初始化sql文件
 
@@ -21,17 +19,14 @@
 
 - 设置字符集文件Utf8mb4.cnf
 
-- build
 
-- run
-
-
+> mysql使用的版本是[latest](https://hub.docker.com/layers/mysql/library/mysql/latest/images/sha256-60adb98682fd8b89b3534624d3bce0b15df6a476f92ba102a2f54b2c353a1544?context=explore) 【截止2020/03/15为止，8.0.19之后的最新版本】
 
 ---
 
 ##### docker-entrypoint-initdb.d原理
 
-我们希望在创建实例的过程中初始化sql脚本，mysql的官方镜像可以支持在容器启动的时候自动执行指定的sql脚本或者shell脚本，我们一起来看看MySql官方镜像的Dockerfile：
+我们希望在创建实例的过程中初始化sql脚本，mysql的官方镜像支持在容器启动的时候自动执行指定的sql脚本或者shell脚本，下面是MySql官方镜像的Dockerfile：
 
 ```dockerfile
 COPY docker-entrypoint.sh /usr/local/bin/
@@ -59,9 +54,19 @@ CMD ["mysqld"]
 	done
 ```
 
-遍历docker-entrypoint-initdb.d目录下所有的.sh和.sql后缀的文件并执行。
+也就是说会自动遍历docker-entrypoint-initdb.d目录下所有的.sh和.sql后缀的文件，所以只需要将需要初始化的sql文放到该目录下即可实现DB的初始化。
 
-所以即使不使用Dockerfile的方式也可以初始化时执行sql文：
+###### 使用docker命令创建容器时直接初始化数据库：
+
+所以即使不使用Dockerfile的方式，直接在使用docker命令创建mysql容器时也可以初始化数据库：
+
+- 数结构如下：
+
+​		-- run.bat/run.sh
+
+​		-- inti.sql
+
+> run.bat/run.sh
 
 ```sh
 basepath=$(cd `dirname $0`; pwd) #获取当前执行路径
@@ -69,7 +74,7 @@ docker run -dit --name mysql_1 -p 3306:3306 -v ${basepath}:/docker-entrypoint-in
 #将当前路径映射到docker-entrypoint-initdb.d下，这样只要在当前执行路径下添加sql或者sh文件，那么在执行docker命令时会自动执行sql或者sh文件
 ```
 
-同一目录下sql文件内容：
+> init.sql
 
 ```sql
 -- 创建数据库
